@@ -1,0 +1,52 @@
+[listener]
+type = "socket"
+
+[[port]]
+port = "tcp/8022"
+services = ["ssh-simulator"]
+
+[[port]]
+port = "tcp/8023"
+services = ["telnet"]
+
+[[port]]
+port = "tcp/5900"
+services = ["vnc"]
+
+[[port]]
+port = "tcp/8080"
+
+[[port]]
+port = "tcp/2121"
+
+[[port]]
+port = "tcp/33306"
+
+[[port]]
+port = "tcp/33389"
+
+[[port]]
+port = "tcp/36379"
+
+[[port]]
+port = "tcp/27017"
+
+[[port]]
+port = "tcp/2525"
+
+[service.ssh-simulator]
+type = "ssh-simulator"
+
+[service.telnet]
+type = "telnet"
+
+[service.vnc]
+type = "vnc"
+
+[[output]]
+type = "file"
+filename = "/var/log/honeytrap/events.jsonl"
+
+[[output]]
+type = "http"
+url = "https://ingestion-production-c968.up.railway.app/ingest/event"

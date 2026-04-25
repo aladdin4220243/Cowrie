@@ -1,0 +1,58 @@
+services:
+  # SSH Honeypot (Cowrie)
+  cowrie:
+    image: cowrie/cowrie:latest
+    container_name: cowrie
+    ports:
+      - "2222:2222"
+      - "2223:2223"
+    volumes:
+      - ./cowrie-logs:/cowrie/cowrie-git/var/log/cowrie
+      - ./cowrie.cfg:/cowrie/cowrie-git/etc/cowrie.cfg
+    restart: unless-stopped
+
+  # Multi-protocol Honeypot (HTTP, FTP, MySQL, RDP, Telnet, SMTP...)
+  honeytrap:
+    image: honeytrap/honeytrap:latest
+    container_name: honeytrap
+    ports:
+      - "80:80"
+      - "8080:8080"
+      - "21:21"
+      - "23:23"
+      - "2525:25"
+      - "3306:3306"
+      - "3389:3389"
+      - "6379:6379"
+      - "36379:6379"
+    volumes:
+      -./honeytrap.toml:/config/config.toml      - ./honeytrap-logs:/var/log/honeytrap
+    restart: unless-stopped
+
+  # Sender: forwards Cowrie logs to ingestion
+  cowrie-sender:
+    image: python:3.12-slim
+    container_name: cowrie-sender
+    volumes:
+      - ./cowrie-logs:/logs
+      - ./sender.py:/app/sender.py
+    working_dir: /app
+    command: >
+      sh -c "pip install requests -q && python sender.py"
+    depends_on:
+      - cowrie
+    restart: unless-stopped
+
+  # Sender: forwards Honeytrap logs to ingestion
+  honeytrap-sender:
+    image: python:3.12-slim
+    container_name: honeytrap-sender
+    volumes:
+      - ./honeytrap-logs:/logs
+      - ./honeytrap_sender.py:/app/honeytrap_sender.py
+    working_dir: /app
+    command: >
+      sh -c "pip install requests -q && python honeytrap_sender.py"
+    depends_on:
+      - honeytrap
+    restart: unless-stopped
